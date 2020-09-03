@@ -18,6 +18,21 @@ variables:
   - ./gradlew syncMultiPlatformLibraryReleaseFrameworkIosArm64
   - cd ./ios-app
 
+## Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# FIREBASE_TOKEN
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+# FIREBASE_APP_ID
+## additional commands should be called in 'before_script' section
 .build_ios_mpp: &build_ios_mpp
   stage: build
   script:
@@ -41,6 +56,21 @@ variables:
     - osx
     - xcode
 
+## Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# FIREBASE_TOKEN
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+# FIREBASE_APP_ID
+## additional commands should be called in 'before_script' section
 .deploy_ios_mpp_firebase: &deploy_ios_mpp_firebase
   stage: deploy
   script:
@@ -57,6 +87,21 @@ variables:
     - xcode
     - osx
 
+## Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# FIREBASE_TOKEN
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+# FIREBASE_APP_ID
+## additional commands should be called in 'before_script' section
 .deploy_ios_firebase: &deploy_ios_firebase
   stage: deploy
   script:
@@ -69,4 +114,4 @@ variables:
   tags:
     - fastlane
     - xcode
-    - osx 
+    - osx
