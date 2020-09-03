@@ -32,7 +32,7 @@ variables:
 # BUILD_APP_IDENTIFIER
 # BUILD_SCHEME
 # FIREBASE_APP_ID
-## additional commands should be called in 'before_script' section
+## 4. additional commands should be called in 'before_script' section
 .build_ios_mpp: &build_ios_mpp
   stage: build
   script:
@@ -70,7 +70,9 @@ variables:
 # BUILD_APP_IDENTIFIER
 # BUILD_SCHEME
 # FIREBASE_APP_ID
-## additional commands should be called in 'before_script' section
+## 3. build settings:
+# BUILD_EXPORT_METHOD //(ad-hoc/enterprise)
+## 4. additional commands should be called in 'before_script' section
 .deploy_ios_mpp_firebase: &deploy_ios_mpp_firebase
   stage: deploy
   script:
@@ -101,7 +103,9 @@ variables:
 # BUILD_APP_IDENTIFIER
 # BUILD_SCHEME
 # FIREBASE_APP_ID
-## additional commands should be called in 'before_script' section
+## 3. build settings:
+# BUILD_EXPORT_METHOD //(ad-hoc/enterprise)
+## 4. additional commands should be called in 'before_script' section
 .deploy_ios_firebase: &deploy_ios_firebase
   stage: deploy
   script:
@@ -115,3 +119,4 @@ variables:
     - fastlane
     - xcode
     - osx
+
