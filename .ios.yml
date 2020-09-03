@@ -4,6 +4,9 @@ variables:
   XCARCHIVE_NAME: "App.xcarchive"
   XCZIP_NAME: "App.zip"
   IPA_NAME: "App.ipa"
+  LANG: "en_US.UTF-8"
+  LANGUAGE: "en_US.UTF-8"
+  LC_ALL: "en_US.UTF-8"
 
 .set_build_number: &set_build_number
   - export BUILD_NUMBER=$(echo $CI_COMMIT_TAG | rev | cut -d '/' -f1 | rev)
@@ -36,9 +39,6 @@ variables:
 .build_ios_mpp: &build_ios_mpp
   stage: build
   script:
-    - export LANG=en_US.UTF-8
-    - export LANGUAGE=en_US.UTF-8
-    - export LC_ALL=en_US.UTF-8
     - *set_build_number
     - *collect_changelog
     - *build_ios_mpp_moko
@@ -120,3 +120,64 @@ variables:
     - xcode
     - osx
 
+## Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# FIREBASE_TOKEN
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+# FIREBASE_APP_ID
+# FASTLANE_ITC_TEAM_ID
+## 3. additional commands should be called in 'before_script' section
+.deploy_ios_appstore: &deploy_ios_appstore
+  stage: deploy
+  script:
+    - fastlane deploy_appstore
+  artifacts:
+    paths:
+      - ${IPA_NAME}
+      - ${CHANGELOG_FILE}
+    expire_in: 2 days
+  tags:
+    - fastlane
+    - xcode
+    - osx
+
+## Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# FIREBASE_TOKEN
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+# FIREBASE_APP_ID
+# FASTLANE_ITC_TEAM_ID
+## 3. additional commands should be called in 'before_script' section
+.deploy_ios_mpp_appstore: &deploy_ios_mpp_appstore
+  stage: deploy
+  script:
+    - mv ${CHANGELOG_FILE} ./ios-app/
+    - cd ./ios-app
+    - fastlane deploy_appstore
+  artifacts:
+    paths:
+      - ./ios-app/${IPA_NAME}
+      - ${CHANGELOG_FILE}
+    expire_in: 2 days
+  tags:
+    - fastlane
+    - xcode
+    - osx
