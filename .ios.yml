@@ -218,3 +218,6 @@ variables:
     - fastlane
     - xcode
     - osx
+
+dump_job_for_ci_syntax_checking:
+  extends: .deploy_ios_mpp_appstore
