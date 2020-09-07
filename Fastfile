@@ -3,13 +3,12 @@ fastlane_version "2.70.0"
 default_platform :ios
 
 # Constants
-K_NAME = "temp_keychain"
 K_PASS = "temp_password"
 
 platform :ios do
-
   lane :fill_keychain do |options|
-        # создаем временный кейчейн
+    # создаем временный кейчейн
+    K_NAME = ENV["CI_JOB_ID"]
     create_keychain(
       name: K_NAME,
       password: K_PASS,
@@ -127,10 +126,12 @@ platform :ios do
   end
 
   after_all do |lane, options|
+    K_NAME = ENV["CI_JOB_ID"]
     delete_keychain(name: K_NAME)
   end
 
   error do |lane, exception, options|
+    K_NAME = ENV["CI_JOB_ID"]
     delete_keychain(name: K_NAME)
   end
 
