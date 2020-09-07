@@ -35,6 +35,25 @@ platform :ios do
     sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{K_PASS} #{K_NAME} 1> /dev/null")
   end
 
+  lane :compile do
+    # убираем автоподпись
+    disable_automatic_code_signing
+
+    # ставим сертификаты
+    fill_keychain(type: "development")
+
+    # ставим поды
+    cocoapods(try_repo_update_on_error: true)
+
+    gym({
+      scheme: ENV["BUILD_SCHEME"], 
+      export_method: 'development', 
+      clean: true, 
+      skip_package_ipa: true,
+      skip_archive: true
+    })
+  end
+
   lane :build do
     # если есть, устанавливаем номер билда в настройки проекта
     build_number = ENV["BUILD_NUMBER"]

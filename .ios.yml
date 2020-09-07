@@ -9,6 +9,35 @@ variables:
   LC_ALL: "en_US.UTF-8"
   FASTFILE_URL: "https://gitlab.icerockdev.com/open-source/gitlab-ci-mobile/-/raw/master/Fastfile"
 
+## Check code only for compilation. Following environments should be provided before job 'script' section called
+## 1. match group (team):
+# MATCH_PASSWORD      //gitlab env
+# FASTLANE_USER       //gitlab env
+# FASTLANE_TEAM_ID
+# FASTLANE_PASSWORD   //gitlab env
+# MATCH_GIT_BRANCH
+# MATCH_GIT_URL
+# FASTLANE_DONT_STORE_PASSWORD
+## 2. project group:
+# BUILD_APP_IDENTIFIER
+# BUILD_SCHEME
+## 3. additional commands should be called in 'before_script' section
+.compile_ios_mpp: &compile_ios_mpp
+  script:
+    - cd ./ios-app
+    - pod install --repo-update
+    - cd ..
+    - ./gradlew syncMultiPlatformLibraryReleaseFrameworkIosArm64
+    - cd ./ios-app
+    - mkdir fastlane || true
+    - curl ${FASTFILE_URL} --output fastlane/Fastfile
+    - fastlane compile
+  tags:
+    - gradle
+    - fastlane
+    - osx
+    - xcode
+
 ## Following environments should be provided before job 'script' section called
 ## 1. match group (team):
 # MATCH_PASSWORD      //gitlab env
@@ -49,7 +78,6 @@ variables:
     - fastlane
     - osx
     - xcode
-
 
 ## Following environments should be provided before job 'script' section called
 ## 1. match group (team):
