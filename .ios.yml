@@ -7,7 +7,7 @@ variables:
   LANG: "en_US.UTF-8"
   LANGUAGE: "en_US.UTF-8"
   LC_ALL: "en_US.UTF-8"
-  FASTFILE_URL: "https://raw.githubusercontent.com/icerockdev/gitlab-ci-tools/test-imports/Fastfile"
+  FASTFILE_URL: "https://gitlab.icerockdev.com/open-source/gitlab-ci-mobile/-/raw/master/Fastfile"
 
 ## Following environments should be provided before job 'script' section called
 ## 1. match group (team):
