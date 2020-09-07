@@ -51,6 +51,7 @@ platform :ios do
       clean: true, 
       skip_package_ipa: true,
       skip_archive: true,
+      skip_codesigning: true,
       xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=\"~/Library/Keychains/#{K_NAME}-db\""
     })
   end
