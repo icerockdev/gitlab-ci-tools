@@ -1,22 +1,15 @@
-.global_variables: &global_variables
-  GIT_SUBMODULE_STRATEGY: recursive
-  CHANGELOG_FILE: "changelog.txt"
-  XCARCHIVE_NAME: "App.xcarchive"
-  XCZIP_NAME: "App.zip"
-  IPA_NAME: "App.ipa"
-  LANG: "en_US.UTF-8"
-  LANGUAGE: "en_US.UTF-8"
-  LC_ALL: "en_US.UTF-8"
-  FASTFILE_URL: "https://gitlab.icerockdev.com/open-source/gitlab-ci-mobile/-/raw/master/Fastfile"
-  MATCH_GIT_URL: "git@gitlab.icerockdev.com:ios/apple-certificates.git"
-  MATCH_CLONE_BRANCH_DIRECTLY: "true"
-  FASTLANE_DONT_STORE_PASSWORD: "true"
-
 .do_pre_script: &do_pre_script
   - eval $PRE_SCRIPT
 
-variables: &my_global_vars
-  <<: *global_variables
+.deploy_firebase_script: &deploy_firebase_script
+  - mkdir fastlane || true
+  - curl ${FASTFILE_URL} --output fastlane/Fastfile
+  - fastlane deploy_firebase
+
+.deploy_appstore_script: &deploy_appstore_script
+  - mkdir fastlane || true
+  - curl ${FASTFILE_URL} --output fastlane/Fastfile
+  - fastlane deploy_appstore
 
 ## Check code only for compilation. Following environments should be provided before job 'script' section called
 ## 1. match group (team):
@@ -65,6 +58,7 @@ variables: &my_global_vars
 .build_ios_mpp: &build_ios_mpp
   stage: build
   script:
+    - *do_pre_script
     - export BUILD_NUMBER=$(echo $CI_COMMIT_TAG | rev | cut -d '/' -f1 | rev)
     - fastlane run changelog_from_git_commits tag_match_pattern:build/* | grep -E '^([a-zA-Z]*-.*)' | sed 's/^\([a-zA-Z]*-[0-9]*\).*$/\1/' | sort | uniq |  tr '\n' ',' | sed 's/\(.*\),/\1/' > ${CHANGELOG_FILE} || true
     - cd ./ios-app
@@ -104,6 +98,7 @@ variables: &my_global_vars
 .build_ios_native: &build_ios_native
   stage: build
   script:
+    - *do_pre_script
     - export BUILD_NUMBER=$(echo $CI_COMMIT_TAG | rev | cut -d '/' -f1 | rev)
     - fastlane run changelog_from_git_commits tag_match_pattern:build/* | grep -E '^([a-zA-Z]*-.*)' | sed 's/^\([a-zA-Z]*-[0-9]*\).*$/\1/' | sort | uniq |  tr '\n' ',' | sed 's/\(.*\),/\1/' > ${CHANGELOG_FILE} || true
     - mkdir fastlane || true
@@ -136,18 +131,14 @@ variables: &my_global_vars
 ## 3. build settings:
 # BUILD_EXPORT_METHOD //(ad-hoc/enterprise)
 ## 4. additional commands should be called in 'before_script' section
-.deploy_ios_mpp_firebase: &deploy_ios_mpp_firebase
+.deploy_ios_firebase: &deploy_ios_firebase
   stage: deploy
-  script: &deploy_ios_mpp_firebase_script
+  script:
     - *do_pre_script
-    - mv ${CHANGELOG_FILE} ./ios-app/
-    - cd ./ios-app
-    - mkdir fastlane || true
-    - curl ${FASTFILE_URL} --output fastlane/Fastfile
-    - fastlane deploy_firebase
+    - *deploy_firebase_script
   artifacts:
     paths:
-      - ./ios-app/${IPA_NAME}
+      - ${IPA_NAME}
       - ${CHANGELOG_FILE}
     expire_in: 2 days
   tags:
@@ -172,16 +163,16 @@ variables: &my_global_vars
 ## 3. build settings:
 # BUILD_EXPORT_METHOD //(ad-hoc/enterprise)
 ## 4. additional commands should be called in 'before_script' section
-.deploy_ios_firebase: &deploy_ios_firebase
+.deploy_ios_mpp_firebase: &deploy_ios_mpp_firebase
   stage: deploy
-  script: &deploy_ios_firebase_script
+  script:
     - *do_pre_script
-    - mkdir fastlane || true
-    - curl ${FASTFILE_URL} --output fastlane/Fastfile
-    - fastlane deploy_firebase
+    - mv ${CHANGELOG_FILE} ./ios-app/
+    - cd ./ios-app
+    - *deploy_firebase_script
   artifacts:
     paths:
-      - ${IPA_NAME}
+      - ./ios-app/${IPA_NAME}
       - ${CHANGELOG_FILE}
     expire_in: 2 days
   tags:
@@ -207,11 +198,9 @@ variables: &my_global_vars
 ## 3. additional commands should be called in 'before_script' section
 .deploy_ios_appstore: &deploy_ios_appstore
   stage: deploy
-  script: &deploy_ios_appstore_script
+  script:
     - *do_pre_script
-    - mkdir fastlane || true
-    - curl ${FASTFILE_URL} --output fastlane/Fastfile
-    - fastlane deploy_appstore
+    - *deploy_appstore_script
   artifacts:
     paths:
       - ${IPA_NAME}
@@ -240,13 +229,11 @@ variables: &my_global_vars
 ## 3. additional commands should be called in 'before_script' section
 .deploy_ios_mpp_appstore: &deploy_ios_mpp_appstore
   stage: deploy
-  script: &deploy_ios_mpp_appstore_script
+  script:
     - *do_pre_script
     - mv ${CHANGELOG_FILE} ./ios-app/
     - cd ./ios-app
-    - mkdir fastlane || true
-    - curl ${FASTFILE_URL} --output fastlane/Fastfile
-    - fastlane deploy_appstore
+    - *deploy_appstore_script
   artifacts:
     paths:
       - ./ios-app/${IPA_NAME}
