@@ -4,35 +4,39 @@ default_platform :ios
 
 # Constants
 K_PASS = "temp_password"
+K_NAME = "#{ENV["CI_JOB_ID"]}"
 
 platform :ios do
-  lane :fill_keychain do |options|
+  def fill_keychain(type)
     # создаем временный кейчейн
-    K_NAME = ENV["CI_JOB_ID"]
     create_keychain(
       name: K_NAME,
       password: K_PASS,
       default_keychain: false,
       unlock: true,
-      timeout: 3600,
-      lock_when_sleeps: false
+      timeout: false,
+      lock_when_sleeps: false,
+      lock_after_timeout: false
     )
+
+    keychain_path = lane_context[SharedValues::KEYCHAIN_PATH] 
 
     # загружаем WWDR сертификаты
     sh("curl -o wwdr_2023.cer 'https://developer.apple.com/certificationauthority/AppleWWDRCA.cer'")
-    sh("security add-certificates -k #{K_NAME} wwdr_2023.cer || true")
+    sh("security add-certificates -k #{keychain_path} wwdr_2023.cer || true")
 
     sh("curl -o wwdr_2030.cer 'https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer'")
-    sh("security add-certificates -k #{K_NAME} wwdr_2030.cer || true")
+    sh("security add-certificates -k #{keychain_path} wwdr_2030.cer || true")
 
     # загружаем данные для подписи
     match(app_identifier: ENV["BUILD_APP_IDENTIFIER"], 
-      type: options[:type], 
+      type: type, 
       keychain_name: K_NAME,
       keychain_password: K_PASS,
-      verbose: true)
+      verbose: true
+    )
 
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{K_PASS} #{K_NAME} 1> /dev/null")
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{K_PASS} #{keychain_path} 1> /dev/null")
   end
 
   lane :compile do
@@ -40,7 +44,7 @@ platform :ios do
     disable_automatic_code_signing
 
     # ставим сертификаты
-    fill_keychain(type: "development")
+    fill_keychain("development")
 
     # ставим поды
     cocoapods(try_repo_update_on_error: true)
@@ -52,7 +56,7 @@ platform :ios do
       skip_package_ipa: true,
       skip_archive: true,
       skip_codesigning: true,
-      xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=\"~/Library/Keychains/#{K_NAME}-db\""
+      xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=#{lane_context[SharedValues::KEYCHAIN_PATH]}"
     })
   end
 
@@ -72,7 +76,7 @@ platform :ios do
     # убираем автоподпись
     disable_automatic_code_signing
 
-    fill_keychain(type: "development")
+    fill_keychain("development")
 
     # ставим поды
     cocoapods(try_repo_update_on_error: true)
@@ -82,7 +86,8 @@ platform :ios do
       export_method: 'development', 
       skip_package_ipa: true, 
       clean: true, 
-      build_path: 'archive'
+      build_path: 'archive',
+      xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=#{lane_context[SharedValues::KEYCHAIN_PATH]}"
     })
     
     # вытаскиваем архив
@@ -100,7 +105,7 @@ platform :ios do
       sh("cd .. && unzip #{ENV["XCZIP_NAME"]}")
     end
 
-    fill_keychain(type: "appstore")
+    fill_keychain("appstore")
 
     # экспортируем приложение
     gym({
@@ -108,7 +113,8 @@ platform :ios do
       skip_build_archive: true,
       export_method: 'app-store', 
       archive_path: ENV["XCARCHIVE_NAME"],
-      output_name: ENV["IPA_NAME"]
+      output_name: ENV["IPA_NAME"],
+      xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=#{lane_context[SharedValues::KEYCHAIN_PATH]}"
     })
 
     # отправляем в appstore
@@ -126,7 +132,7 @@ platform :ios do
     match_type = ENV["BUILD_EXPORT_METHOD"].tr('-', '')
     notes_path = ENV["CHANGELOG_PATH"]
 
-    fill_keychain(type: match_type)
+    fill_keychain(match_type)
 
     # экспортируем приложение
     gym({
@@ -134,7 +140,8 @@ platform :ios do
       skip_build_archive: true,
       export_method: ENV["BUILD_EXPORT_METHOD"], 
       archive_path: ENV["XCARCHIVE_NAME"],
-      output_name: ENV["IPA_NAME"]
+      output_name: ENV["IPA_NAME"],
+      xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=#{lane_context[SharedValues::KEYCHAIN_PATH]}"
     })
 
 
@@ -147,12 +154,13 @@ platform :ios do
   end
 
   after_all do |lane, options|
-    K_NAME = ENV["CI_JOB_ID"]
-    delete_keychain(name: K_NAME)
+    delete_keychain_lanes = [:compile, :build, :deploy_firebase, :deploy_appstore]
+    if delete_keychain_lanes.include?(lane)
+        delete_keychain(name: K_NAME)
+    end
   end
 
   error do |lane, exception, options|
-    K_NAME = ENV["CI_JOB_ID"]
     delete_keychain(name: K_NAME)
   end
 
