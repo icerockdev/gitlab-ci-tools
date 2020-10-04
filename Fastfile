@@ -36,7 +36,9 @@ platform :ios do
       verbose: true
     )
 
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{K_PASS} #{keychain_path} 1> /dev/null")
+    sh("security set-keychain-settings #{keychain_path}")
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{K_PASS} #{keychain_path}")
+    sh("security show-keychain-info #{keychain_path}")
   end
 
   lane :compile do

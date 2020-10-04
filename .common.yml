@@ -1,0 +1,16 @@
+.global_variables: &global_variables
+  GIT_SUBMODULE_STRATEGY: recursive
+  CHANGELOG_FILE: "changelog.txt"
+  XCARCHIVE_NAME: "App.xcarchive"
+  XCZIP_NAME: "App.zip"
+  IPA_NAME: "App.ipa"
+  LANG: "en_US.UTF-8"
+  LANGUAGE: "en_US.UTF-8"
+  LC_ALL: "en_US.UTF-8"
+  FASTFILE_URL: "https://gitlab.icerockdev.com/open-source/gitlab-ci-mobile/-/raw/master/Fastfile"
+  MATCH_GIT_URL: "git@gitlab.icerockdev.com:ios/apple-certificates.git"
+  MATCH_CLONE_BRANCH_DIRECTLY: "true"
+  FASTLANE_DONT_STORE_PASSWORD: "true"
+
+variables: &my_global_vars
+  <<: *global_variables
