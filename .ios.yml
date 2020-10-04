@@ -1,4 +1,4 @@
-variables:
+.global_variables: &global_variables
   GIT_SUBMODULE_STRATEGY: recursive
   CHANGELOG_FILE: "changelog.txt"
   XCARCHIVE_NAME: "App.xcarchive"
@@ -8,6 +8,15 @@ variables:
   LANGUAGE: "en_US.UTF-8"
   LC_ALL: "en_US.UTF-8"
   FASTFILE_URL: "https://gitlab.icerockdev.com/open-source/gitlab-ci-mobile/-/raw/master/Fastfile"
+  MATCH_GIT_URL: "git@gitlab.icerockdev.com:ios/apple-certificates.git"
+  MATCH_CLONE_BRANCH_DIRECTLY: "true"
+  FASTLANE_DONT_STORE_PASSWORD: "true"
+
+.do_pre_script: &do_pre_script
+  - eval $PRE_SCRIPT
+
+variables: &my_global_vars
+  <<: *global_variables
 
 ## Check code only for compilation. Following environments should be provided before job 'script' section called
 ## 1. match group (team):
@@ -71,8 +80,6 @@ variables:
       - ./ios-app/${XCZIP_NAME}
       - ${CHANGELOG_FILE}
     expire_in: 2 days
-  except:
-    - branches
   tags:
     - gradle
     - fastlane
@@ -107,8 +114,6 @@ variables:
       - ${XCZIP_NAME}
       - ${CHANGELOG_FILE}
     expire_in: 2 days
-  except:
-    - branches
   tags:
     - fastlane
     - osx
@@ -133,7 +138,8 @@ variables:
 ## 4. additional commands should be called in 'before_script' section
 .deploy_ios_mpp_firebase: &deploy_ios_mpp_firebase
   stage: deploy
-  script:
+  script: &deploy_ios_mpp_firebase_script
+    - *do_pre_script
     - mv ${CHANGELOG_FILE} ./ios-app/
     - cd ./ios-app
     - mkdir fastlane || true
@@ -168,7 +174,8 @@ variables:
 ## 4. additional commands should be called in 'before_script' section
 .deploy_ios_firebase: &deploy_ios_firebase
   stage: deploy
-  script:
+  script: &deploy_ios_firebase_script
+    - *do_pre_script
     - mkdir fastlane || true
     - curl ${FASTFILE_URL} --output fastlane/Fastfile
     - fastlane deploy_firebase
@@ -200,7 +207,8 @@ variables:
 ## 3. additional commands should be called in 'before_script' section
 .deploy_ios_appstore: &deploy_ios_appstore
   stage: deploy
-  script:
+  script: &deploy_ios_appstore_script
+    - *do_pre_script
     - mkdir fastlane || true
     - curl ${FASTFILE_URL} --output fastlane/Fastfile
     - fastlane deploy_appstore
@@ -232,7 +240,8 @@ variables:
 ## 3. additional commands should be called in 'before_script' section
 .deploy_ios_mpp_appstore: &deploy_ios_mpp_appstore
   stage: deploy
-  script:
+  script: &deploy_ios_mpp_appstore_script
+    - *do_pre_script
     - mv ${CHANGELOG_FILE} ./ios-app/
     - cd ./ios-app
     - mkdir fastlane || true
