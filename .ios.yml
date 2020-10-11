@@ -30,7 +30,7 @@
     - cd ./ios-app
     - pod install --repo-update
     - cd ..
-    - ./gradlew syncMultiPlatformLibraryReleaseFrameworkIosArm64
+    - ./gradlew syncMultiPlatformLibraryDebugFrameworkIosArm64
     - cd ./ios-app
     - mkdir fastlane || true
     - curl ${FASTFILE_URL} --output fastlane/Fastfile
