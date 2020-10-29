@@ -119,11 +119,24 @@ platform :ios do
       xcargs: "OTHER_CODE_SIGN_FLAGS=--keychain=#{lane_context[SharedValues::KEYCHAIN_PATH]}"
     })
 
-    # отправляем в appstore
-    upload_to_testflight(
-      skip_submission: true,
-      skip_waiting_for_build_processing: true
-    )
+    # check if application specific password provided
+    app_password = ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"]
+    app_id = ENV["FASTLANE_APP_APPLE_ID"]
+    
+    if (!(app_password.nil?) && !(app_id.nil?))
+      upload_to_testflight(
+        apple_id: app_id,
+        skip_submission: true,
+        skip_waiting_for_build_processing: true
+      )
+    else
+      upload_to_testflight(
+        skip_submission: true,
+        skip_waiting_for_build_processing: true
+      )
+    end
+
+
   end
 
   lane :deploy_firebase do
